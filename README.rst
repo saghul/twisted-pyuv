@@ -30,6 +30,7 @@ our reactor. In order to do that add the following lines at the beginning
 of your project, before importing anything from Twisted:
 
 ::
+
     import twisted_pyuv
     twisted_pyuv.install()
 
