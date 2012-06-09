@@ -41,7 +41,7 @@ class UVDelayedCall(object):
         self._reactor._removeDelayedCall(self)
         try:
             self._func()
-        except:
+        except Exception:
             logging.error("_called caught exception", exc_info=True)
 
     def getTime(self):
