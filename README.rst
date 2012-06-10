@@ -17,9 +17,7 @@ Motivation
 
 This is an experimental project to test pyuv's capabilities with a
 big framework such as Twisted. It still doesn't implement all it's
-features, but sockets are working :-) It doesn't currently
-support Windows, even though pyuv does, this will be added in the
-future.
+features, but sockets are working :-)
 
 
 Using it
