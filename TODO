@@ -2,5 +2,4 @@
 - Use pyuv's resolver
 - Use pyuv's thread pool
 - Implement spawnProcess with pyuv.Process
-- Windows support
 
