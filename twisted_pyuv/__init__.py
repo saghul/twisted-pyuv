@@ -172,7 +172,6 @@ class UVReactor(PosixReactorBase):
     # IReactorFDSet
 
     def addReader(self, reader):
-        """Add a FileDescriptor for notification of data available to read."""
         if reader in self._readers:
             # Don't add the reader if it's already there
             return
@@ -194,7 +193,6 @@ class UVReactor(PosixReactorBase):
             self._poll_handles[fd] = poll_handle
 
     def addWriter(self, writer):
-        """Add a FileDescriptor for notification of data available to write."""
         if writer in self._writers:
             return
         fd = writer.fileno()
@@ -215,7 +213,6 @@ class UVReactor(PosixReactorBase):
             self._poll_handles[fd] = poll_handle
 
     def removeReader(self, reader):
-        """Remove a Selectable for notification of data available to read."""
         if reader in self._readers:
             fd = self._readers.pop(reader)
             _, writer = self._fds[fd]
@@ -233,7 +230,6 @@ class UVReactor(PosixReactorBase):
                 del self._poll_handles[fd]
 
     def removeWriter(self, writer):
-        """Remove a Selectable for notification of data available to write."""
         if writer in self._writers:
             fd = self._writers.pop(writer)
             reader, _ = self._fds[fd]
