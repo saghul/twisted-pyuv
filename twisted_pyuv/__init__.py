@@ -19,12 +19,11 @@ from zope.interface import implements
 
 class UVWaker(object):
     def __init__(self, reactor):
-        self._async = pyuv.Async(reactor._loop, self._cb)
+        self._async = pyuv.Async(reactor._loop, lambda x: None)
         self._async.unref()
-    def _cb(self, handle):
-        pass
     def wakeUp(self):
         self._async.send()
+
 
 class UVDelayedCall(object):
     implements(IDelayedCall)
