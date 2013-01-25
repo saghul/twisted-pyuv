@@ -68,15 +68,6 @@ class UVDelayedCall(object):
         return self._active
 
 class UVReactor(PosixReactorBase):
-    """Twisted reactor built on the Tornado IOLoop.
-
-    Since it is intented to be used in applications where the top-level
-    event loop is ``io_loop.start()`` rather than ``reactor.run()``,
-    it is implemented a little differently than other Twisted reactors.
-    We override `mainLoop` instead of `doIteration` and must implement
-    timed call functionality on top of `IOLoop.add_timeout` rather than
-    using the implementation in `PosixReactorBase`.
-    """
     implements(IReactorTime, IReactorFDSet)
 
     def __init__(self):
