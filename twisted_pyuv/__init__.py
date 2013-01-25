@@ -3,6 +3,7 @@ from __future__ import absolute_import, with_statement
 
 import functools
 import logging
+import signal
 import threading
 import time
 
@@ -15,6 +16,8 @@ from twisted.internet.interfaces import IReactorFDSet, IDelayedCall, IReactorTim
 from twisted.python import failure, log
 from twisted.internet import error
 from zope.interface import implements
+
+from .util import SocketPair
 
 
 class UVWaker(object):
@@ -66,12 +69,12 @@ class UVDelayedCall(object):
     def active(self):
         return self._active
 
+
 class UVReactor(PosixReactorBase):
     implements(IReactorTime, IReactorFDSet)
 
     def __init__(self):
         self._loop = pyuv.Loop()
-        self._signal_watcher = pyuv.Signal(self._loop)
         self._async_handle = pyuv.Async(self._loop, self._async_cb)
         self._async_handle_lock = threading.Lock()
         self._async_callbacks = deque()
@@ -80,15 +83,17 @@ class UVReactor(PosixReactorBase):
         self._fds = {}      # map of fd to a (reader, writer) tuple
         self._delayedCalls = {}
         self._poll_handles = {}
+        self._signal_fds = SocketPair()
+        self._signal_checker = pyuv.util.SignalChecker(self._loop, self._signal_fds.reader_fileno())
+        self._signal_checker.unref()
+        self._signal_checker.start()
         PosixReactorBase.__init__(self)
 
-    def _get_loop_handles(self):
-        handles = set()
+    def _close_loop_handles(self):
         def cb(handle):
             if not handle.closed:
-                handles.add(handle)
+                handle.close()
         self._loop.walk(cb)
-        return handles
 
     # IReactorTime
     def seconds(self):
@@ -128,8 +133,12 @@ class UVReactor(PosixReactorBase):
         self._async_handle.send()
 
     def _handleSignals(self):
-        """Bypass installing the child waker"""
+        # Bypass installing the child waker, for now
         _SignalReactorMixin._handleSignals(self)
+        try:
+            signal.set_wakeup_fd(self._signal_fds.writer_fileno())
+        except ValueError:
+            pass
 
     # IReactorProcess
 
@@ -256,43 +265,35 @@ class UVReactor(PosixReactorBase):
         return self._writers.keys()
 
     def stop(self):
-        self._async_handle.close()
-        for handle in self._get_loop_handles():
-            if hasattr(handle, 'stop') and callable(handle.stop):
-                handle.stop()
-        PosixReactorBase.stop(self)
+        PosixReactorBase.crash(self)
+        self.wakeUp()
 
     def crash(self):
-        # No need to stop handles, it's done by stop
         PosixReactorBase.crash(self)
+        self.wakeUp()
 
-    def runUntilCurrent(self):
-        raise NotImplementedError("runUntilCurrent")
+    def iterate(delay=0):
+        raise NotImplementedError
 
-    def startRunning(self, installSignalHandlers=True):
-        self._signal_watcher.start()
-        _SignalReactorMixin.startRunning(self, installSignalHandlers)
+    def run(self, installSignalHandlers=True):
+        self.startRunning(installSignalHandlers=installSignalHandlers)
 
-    def doIteration(self, delay):
-        raise NotImplementedError("doIteration")
-
-    def mainLoop(self):
         while self._started:
             try:
-                while self._started:
-                    if self._stopped:
-                        self.fireSystemEvent("shutdown")
-                        break
-                    self._loop.run()
+                while self._started and not self._stopped and self._loop.run(pyuv.UV_RUN_ONCE):
+                    pass
+                if self._stopped:
+                    self.fireSystemEvent("shutdown")
+                    break
             except:
                 log.msg("Unexpected error in main loop.")
                 log.err()
             else:
-                for handle in self._get_loop_handles():
-                    handle.close()
+                self._signal_fds.close()
+                self._close_loop_handles()
                 # Run the loop so the close callbacks are fired and memory is freed
                 # It will not block because all handles are closed
-                self._loop.run()
+                self._loop.run(pyuv.UV_RUN_NOWAIT)
                 log.msg('Main loop terminated.')
 
 
