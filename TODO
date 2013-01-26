@@ -1,5 +1,3 @@
 
-- Use pyuv's resolver
-- Use pyuv's thread pool
-- Implement spawnProcess with pyuv.Process
+- Add a SIGCHLD handler to make spawnProcess work
 
