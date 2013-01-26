@@ -3,21 +3,31 @@
 A Twisted Reactor based on pyuv
 ===============================
 
-twisted-pyuv is a Twisted Reactor implementation which uses pyuv
-as the networking library instead of any of the builtin reactors.
+twisted-pyuv is a `Twisted <http://www.twistedmatrix.com/>`_ Reactor implementation
+which uses `pyuv <http://github.com/saghul/pyuv>`_ as the networking library instead
+of any of the builtin reactors.
 
 pyuv is a Python interface for libuv, a high performance asynchronous
 networking library used as the platform layer for NodeJS.
-
-Source code is on `GitHub <http://github.com/saghul/pyuv>`_.
 
 
 Motivation
 ==========
 
 This is an experimental project to test pyuv's capabilities with a
-big framework such as Twisted. It still doesn't implement all it's
-features, but sockets are working :-)
+big framework such as Twisted.
+
+
+Installation
+============
+
+twisted-pyuv requires pyuv (master).
+
+::
+
+    pip install git+https://github.com/saghul/pyuv.git
+    pip install twisted
+    python setup.py install
 
 
 Using it
