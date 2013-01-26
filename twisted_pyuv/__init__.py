@@ -159,10 +159,8 @@ class UVReactor(PosixReactorBase):
             err = None
             if reader.fileno() == -1:
                 err = error.ConnectionLost()
-            elif events & pyuv.UV_READABLE:
+            elif events & pyuv.UV_READABLE or poll_error is not None:
                 err = log.callWithLogger(reader, reader.doRead)
-            if err is None and poll_error is not None:
-                err = error.ConnectionLost()
             if err is not None:
                 self.removeReader(reader)
                 reader.readConnectionLost(failure.Failure(err))
@@ -170,10 +168,8 @@ class UVReactor(PosixReactorBase):
             err = None
             if writer.fileno() == -1:
                 err = error.ConnectionLost()
-            elif events & pyuv.UV_WRITABLE:
+            elif events & pyuv.UV_WRITABLE or poll_error is not None:
                 err = log.callWithLogger(writer, writer.doWrite)
-            if err is None and poll_error is not None:
-                err = error.ConnectionLost()
             if err is not None:
                 self.removeWriter(writer)
                 writer.writeConnectionLost(failure.Failure(err))
