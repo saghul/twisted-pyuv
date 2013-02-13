@@ -153,8 +153,7 @@ class UVReactor(PosixReactorBase):
             self.waker.wakeUp()
 
     def _invoke_callback(self, handle, events, poll_error):
-        fd = handle.fd
-        reader, writer = self._fds[fd]
+        reader, writer = self._fds[handle.fileno()]
         if reader:
             err = None
             if reader.fileno() == -1:
@@ -194,7 +193,6 @@ class UVReactor(PosixReactorBase):
             self._fds[fd] = (reader, None)
             poll_handle = pyuv.Poll(self._loop, fd)
             poll_handle.start(pyuv.UV_READABLE, self._invoke_callback)
-            poll_handle.fd = fd
             self._poll_handles[fd] = poll_handle
 
     def addWriter(self, writer):
@@ -214,7 +212,6 @@ class UVReactor(PosixReactorBase):
             self._fds[fd] = (None, writer)
             poll_handle = pyuv.Poll(self._loop, fd)
             poll_handle.start(pyuv.UV_WRITABLE, self._invoke_callback)
-            poll_handle.fd = fd
             self._poll_handles[fd] = poll_handle
 
     def removeReader(self, reader):
