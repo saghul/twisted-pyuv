@@ -36,11 +36,9 @@ class UVDelayedCall(object):
         self._func = functools.partial(f, *args, **kw)
         self._time = self._reactor.seconds() + seconds
         self._timer = pyuv.Timer(self._reactor._loop)
-        self._timer.start(self._called, self._time-self._reactor.seconds(), 0.0)
-        self._active = True
+        self._timer.start(self._called, seconds, 0.0)
 
     def _called(self, handle):
-        self._active = False
         self._timer.stop()
         self._reactor._removeDelayedCall(self)
         try:
@@ -52,7 +50,6 @@ class UVDelayedCall(object):
         return self._time
 
     def cancel(self):
-        self._active = False
         self._timer.stop()
         self._reactor._removeDelayedCall(self)
 
@@ -64,10 +61,10 @@ class UVDelayedCall(object):
     def reset(self, seconds):
         self._timer.stop()
         self._time = self._reactor.seconds() + seconds
-        self._timer.start(self._called, self._time-self._reactor.seconds(), 0.0)
+        self._timer.start(self._called, seconds, 0.0)
 
     def active(self):
-        return self._active
+        return self._timer.active
 
 
 class UVReactor(PosixReactorBase):
