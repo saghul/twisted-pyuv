@@ -21,11 +21,11 @@ big framework such as Twisted.
 Installation
 ============
 
-twisted-pyuv requires pyuv (master).
+twisted-pyuv requires pyuv >= 0.10.0.
 
 ::
 
-    pip install git+https://github.com/saghul/pyuv.git
+    pip install -U pyuv
     pip install twisted
     python setup.py install
 
