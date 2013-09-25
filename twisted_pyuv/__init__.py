@@ -15,7 +15,7 @@ from twisted.internet.posixbase import PosixReactorBase
 from twisted.internet.interfaces import IReactorFDSet, IDelayedCall, IReactorTime
 from twisted.python import failure, log
 from twisted.internet import error
-from zope.interface import implements
+from zope.interface import implementer
 
 from .util import SocketPair
 
@@ -27,10 +27,8 @@ class UVWaker(object):
     def wakeUp(self):
         self._async.send()
 
-
+@implementer(IDelayedCall)
 class UVDelayedCall(object):
-    implements(IDelayedCall)
-
     def __init__(self, reactor, seconds, f, *args, **kw):
         self._reactor = reactor
         self._func = functools.partial(f, *args, **kw)
@@ -66,10 +64,8 @@ class UVDelayedCall(object):
     def active(self):
         return self._timer.active
 
-
+@implementer(IReactorTime, IReactorFDSet)
 class UVReactor(PosixReactorBase):
-    implements(IReactorTime, IReactorFDSet)
-
     def __init__(self):
         self._loop = pyuv.Loop()
         self._async_handle = pyuv.Async(self._loop, self._async_cb)
